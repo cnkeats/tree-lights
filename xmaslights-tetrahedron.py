@@ -53,7 +53,7 @@ def xmaslight():
     # A spinning tetrahedron to light up Matt Parker's Christmas Tree!
     # Code modified from: https://github.com/standupmaths/xmastree2020/blob/main/xmaslights-spin.py
     # 
-    # Watch Matt's video:https://www.youtube.com/watch?v=TvlpIojusBE
+    # Watch Matt's video: https://www.youtube.com/watch?v=TvlpIojusBE
     #
     # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
@@ -148,7 +148,7 @@ def xmaslight():
             [(0 + xOffset) * scale, (1 + yOffset) * scale, (1/1.414 + zOffset) * scale]
         ]
 
-        # Vertexes of our tetrahedron, with the applied rotation
+        # Vertices of our tetrahedron, with the applied rotation
         tetrahedron = [
             matrixRotate(tetrahedron[0], xAngleChange * frame, yAngleChange * frame , zAngleChange * frame),
             matrixRotate(tetrahedron[1], xAngleChange * frame, yAngleChange * frame , zAngleChange * frame),
