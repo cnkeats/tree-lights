@@ -1,4 +1,3 @@
-
 def xmaslight():
     # This is the code from my 
     
@@ -7,7 +6,7 @@ def xmaslight():
     # Here are the libraries I am currently using:
     import time
     import board
-    #import neopixel
+    import neopixel
     import re
     import math
     
@@ -39,17 +38,63 @@ def xmaslight():
         coords.append(new_coord)
     
     #set up the pixels (AKA 'LEDs')
-    #PIXEL_COUNT = len(coords) # this should be 500
-
+    PIXEL_COUNT = len(coords) # this should be 500
     
-    #pixels = neopixel.NeoPixel(board.D18, PIXEL_COUNT, auto_write=False)
+    pixels = neopixel.NeoPixel(board.D18, PIXEL_COUNT, auto_write=False)
     
     
     # YOU CAN EDIT FROM HERE DOWN
-
-    import matplotlib.pyplot as plt
-    import matplotlib.animation as animation
     import numpy as np
+
+    # This function tells you if a given point is on the same side of a triangle (v1, v2, v3) as the point v4
+    def sameSide(v1, v2, v3, v4, point):
+
+        normal = np.cross(np.subtract(v2, v1), np.subtract(v3, v1))
+        dotv4 = np.dot(normal, np.subtract(v4, v1))
+        dotpoint = np.dot(normal, np.subtract(point, v1))
+
+        return (np.sign(dotv4) == np.sign(dotpoint))
+
+    # By checking a point against all the faces of a tetrahedron, we can tell if the point is inside or outside
+    def pointInsideTetrahedron(v1, v2, v3, v4, point):
+        return (sameSide(v1, v2, v3, v4, point) and
+                sameSide(v2, v3, v4, v1, point) and
+                sameSide(v3, v4, v1, v2, point) and
+                sameSide(v4, v1, v2, v3, point))
+
+    # This function rotates a point by 3 angles from their respective axes
+    def matrixRotate(point, xAngle, yAngle, zAngle):
+        v1 = np.array([[point[0]], [point[1]], [point[2]]])
+
+        xAngle = math.radians(xAngle)
+        yAngle = math.radians(yAngle)
+        zAngle = math.radians(zAngle)
+
+        xRotation = np.array([
+            [1, 0, 0],
+            [0, np.cos(xAngle), -np.sin(xAngle)],
+            [0, np.sin(xAngle), np.cos(xAngle)]
+        ])
+
+        yRotation = np.array([
+            [np.cos(yAngle), 0, np.sin(yAngle)],
+            [0, 1, 0],
+            [-np.sin(yAngle), 0, np.cos(yAngle)]
+        ])
+
+        zRotation = np.array([
+            [np.cos(zAngle), -np.sin(zAngle), 0],
+            [np.sin(zAngle), np.cos(zAngle), 0],
+            [0, 0, 1]
+        ])
+
+        v2 = zRotation.dot(yRotation.dot(xRotation.dot(v1)))
+        return v2[0][0], v2[1][0], v2[2][0]
+    
+
+    # Inside and outside colors in GRB
+    insideColor = [115, 230, 0] # orange
+    outsideColor = [0, 31, 77] # dark purple
 
     # The change of the angle per update in DEGREES
     # Rotations apply in the order X -> Y -> Z because I'm bad at quaternions
@@ -57,21 +102,17 @@ def xmaslight():
     yAngleChange = 10
     zAngleChange = 15
 
-    fig = plt.figure()
-    for i in range(500):
-        plt.clf()
-        ax = fig.add_subplot(111, projection='3d')
+    frame = 0
+    
+    run = 1
+    while run == 1:
 
-        ax.set_xlabel('X Label')
-        ax.set_ylabel('Y Label')
-        ax.set_zlabel('Z Label')
-
-        ax.set_xlim([-400, 400])
-        ax.set_ylim([-400, 400])
-        ax.set_zlim([-400, 400])
-
-
+        # Scale of the tetrahedron
         scale = 400
+
+        # Offset of the tetrahedron. (0, 0, 0) will make it centered on the origin
+        # Note that the tetrahedron does not rotate about its own center, but uses the various axes
+        #   and so offsetting it means it won't rotate in-place
         xOffset = 0
         yOffset = 0
         zOffset = .4
@@ -82,106 +123,24 @@ def xmaslight():
             [(0 + xOffset) * scale, (-1 + yOffset) * scale, (1/1.414 + zOffset) * scale],
             [(0 + xOffset) * scale, (1 + yOffset) * scale, (1/1.414 + zOffset) * scale]
         ]
-        # vertexes of a tetrahedron
-        tetrahedron = [
-            matrixRotate(tetrahedron[0], xAngleChange * i, yAngleChange * i , zAngleChange * i),
-            matrixRotate(tetrahedron[1], xAngleChange * i, yAngleChange * i , zAngleChange * i),
-            matrixRotate(tetrahedron[2],  xAngleChange * i, yAngleChange * i , zAngleChange * i),
-            matrixRotate(tetrahedron[3],  xAngleChange * i , yAngleChange * i , zAngleChange * i)
-        ]
 
-        inside = []
-        outside = []
+        # Vertexes of our tetrahedron, with the applied rotation
+        tetrahedron = [
+            matrixRotate(tetrahedron[0], xAngleChange * frame, yAngleChange * frame , zAngleChange * frame),
+            matrixRotate(tetrahedron[1], xAngleChange * frame, yAngleChange * frame , zAngleChange * frame),
+            matrixRotate(tetrahedron[2],  xAngleChange * frame, yAngleChange * frame , zAngleChange * frame),
+            matrixRotate(tetrahedron[3],  xAngleChange * frame , yAngleChange * frame , zAngleChange * frame)
+        ]
         
+        LED = 0
         for coord in coords:
             if (pointInsideTetrahedron(tetrahedron[0], tetrahedron[1], tetrahedron[2], tetrahedron[3], coord)):
-                inside.append(coord)
+                pixels[LED] = insideColor
             else:
-                outside.append(coord)
-
-        if (len(inside) > 0):
-            xs, ys, zs = zip(*inside)
-            ax.scatter(xs, ys, zs, color='orange')
-
-        if (len(outside) > 0):
-            xs, ys, zs = zip(*outside)
-            ax.scatter(xs, ys, zs, color='purple')
-
-        xs = []
-        ys = []
-        zs = []
-
-        mesh = [
-            tetrahedron[0],
-            tetrahedron[1],
-            tetrahedron[2],
-            tetrahedron[0],
-            tetrahedron[3],
-            tetrahedron[1],
-            tetrahedron[3],
-            tetrahedron[2]
-        ]
-
-        for coord in mesh:
-            xs.append(coord[0])
-            ys.append(coord[1])
-            zs.append(coord[2])
-        ax.scatter(xs, ys, zs)
-        ax.plot(xs, ys, zs)
-
-        plt.savefig(str(i) + '.png')
-    
-    #plt.show()
-
-
-def sameSide(v1, v2, v3, v4, point):
-    import numpy as np
-
-    normal = np.cross(np.subtract(v2, v1), np.subtract(v3, v1))
-    dotv4 = np.dot(normal, np.subtract(v4, v1))
-    dotpoint = np.dot(normal, np.subtract(point, v1))
-
-    return (np.sign(dotv4) == np.sign(dotpoint))
-
-def pointInsideTetrahedron(v1, v2, v3, v4, point):
-    return (sameSide(v1, v2, v3, v4, point) and
-            sameSide(v2, v3, v4, v1, point) and
-            sameSide(v3, v4, v1, v2, point) and
-            sameSide(v4, v1, v2, v3, point))
-
-def matrixRotate(point, xAngle, yAngle, zAngle):
-    import numpy as np
-    import math
-
-    v1 = np.array([[point[0]], [point[1]], [point[2]]])
-
-    xAngle = math.radians(xAngle)
-    yAngle = math.radians(yAngle)
-    zAngle = math.radians(zAngle)
-
-    xRotation = np.array([
-        [1, 0, 0],
-        [0, np.cos(xAngle), -np.sin(xAngle)],
-        [0, np.sin(xAngle), np.cos(xAngle)]
-    ])
-
-    yRotation = np.array([
-        [np.cos(yAngle), 0, np.sin(yAngle)],
-        [0, 1, 0],
-        [-np.sin(yAngle), 0, np.cos(yAngle)]
-    ])
-
-    zRotation = np.array([
-        [np.cos(zAngle), -np.sin(zAngle), 0],
-        [np.sin(zAngle), np.cos(zAngle), 0],
-        [0, 0, 1]
-    ])
-
-    v2 = zRotation.dot(yRotation.dot(xRotation.dot(v1)))
-    return v2[0][0], v2[1][0], v2[2][0]
-
-
-    
+                pixels[LED] = outsideColor
+            LED += 1
+        
+        frame += 1
 
 
 # yes, I just put this at the bottom so it auto runs
