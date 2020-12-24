@@ -44,6 +44,19 @@ def xmaslight():
     
     
     # YOU CAN EDIT FROM HERE DOWN
+
+    # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+    #
+    # Authors: Calvin Keats, Matt Parker, Eugénie von Tunzelmann
+    # Date: 12/23/2020
+    #
+    # A spinning tetrahedron to light up Matt Parker's Christmas Tree!
+    # Code modified from: https://github.com/standupmaths/xmastree2020/blob/main/xmaslights-spin.py
+    # 
+    # Watch Matt's video:https://www.youtube.com/watch?v=TvlpIojusBE
+    #
+    # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+
     import numpy as np
 
     # This function tells you if a given point is on the same side of a triangle (v1, v2, v3) as the point v4
@@ -90,11 +103,26 @@ def xmaslight():
 
         v2 = zRotation.dot(yRotation.dot(xRotation.dot(v1)))
         return v2[0][0], v2[1][0], v2[2][0]
-    
+
+    # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+    #
+    # Adjust these values to change the effect!
+    #
+    # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
     # Inside and outside colors in GRB
     insideColor = [115, 230, 0] # orange
     outsideColor = [0, 31, 77] # dark purple
+
+    # Scale of the tetrahedron
+    scale = 400
+
+    # Offset of the tetrahedron. (0, 0, 0) will make it centered on the origin
+    # Note that the tetrahedron does not rotate about its own center, but uses the various axes
+    #   and so offsetting it means it won't rotate in-place
+    xOffset = 0
+    yOffset = 0
+    zOffset = .4
 
     # The change of the angle per update in DEGREES
     # Rotations apply in the order X -> Y -> Z because I'm bad at quaternions
@@ -102,20 +130,16 @@ def xmaslight():
     yAngleChange = 10
     zAngleChange = 15
 
+    # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+    #
+    # Update the LEDs!
+    #
+    # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+
     frame = 0
-    
+
     run = 1
     while run == 1:
-
-        # Scale of the tetrahedron
-        scale = 400
-
-        # Offset of the tetrahedron. (0, 0, 0) will make it centered on the origin
-        # Note that the tetrahedron does not rotate about its own center, but uses the various axes
-        #   and so offsetting it means it won't rotate in-place
-        xOffset = 0
-        yOffset = 0
-        zOffset = .4
         
         tetrahedron = [
             [(-1 + xOffset) * scale, (0 + yOffset) * scale, (-1/1.414 + zOffset) * scale],
@@ -141,6 +165,8 @@ def xmaslight():
             LED += 1
         
         frame += 1
+    
+    return 'DONE'
 
 
 # yes, I just put this at the bottom so it auto runs
