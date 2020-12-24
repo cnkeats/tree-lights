@@ -164,6 +164,9 @@ def xmaslight():
                 pixels[LED] = outsideColor
             LED += 1
         
+        # Send out the updates to the lights
+        pixels.show()
+        
         frame += 1
     
     return 'DONE'
