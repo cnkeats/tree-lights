@@ -53,12 +53,13 @@ def xmaslight():
 
     # The change of the angle per update in DEGREES
     # Rotations apply in the order X -> Y -> Z because I'm bad at quaternions
-    xAngleChange = 1.5
-    yAngleChange = 3.0
-    zAngleChange = 4.5
+    xAngleChange = 5
+    yAngleChange = 10
+    zAngleChange = 15
 
-    for i in range(12):
-        fig = plt.figure()
+    fig = plt.figure()
+    for i in range(500):
+        plt.clf()
         ax = fig.add_subplot(111, projection='3d')
 
         ax.set_xlabel('X Label')
@@ -69,13 +70,24 @@ def xmaslight():
         ax.set_ylim([-400, 400])
         ax.set_zlim([-400, 400])
 
-        scale = 250
+
+        scale = 400
+        xOffset = 0
+        yOffset = 0
+        zOffset = .4
+        
+        tetrahedron = [
+            [(-1 + xOffset) * scale, (0 + yOffset) * scale, (-1/1.414 + zOffset) * scale],
+            [(1 + xOffset) * scale, (0 + yOffset) * scale, (-1/1.414 + zOffset) * scale],
+            [(0 + xOffset) * scale, (-1 + yOffset) * scale, (1/1.414 + zOffset) * scale],
+            [(0 + xOffset) * scale, (1 + yOffset) * scale, (1/1.414 + zOffset) * scale]
+        ]
         # vertexes of a tetrahedron
         tetrahedron = [
-            matrixRotate([-1 * scale, 0 * scale, -1/1.414 * scale], xAngleChange * i, yAngleChange * i, zAngleChange * i),
-            matrixRotate([1 * scale, 0 * scale, -1/1.414 * scale], xAngleChange * i, yAngleChange * i, zAngleChange * i),
-            matrixRotate([0 * scale, -1 * scale, 1/1.414 * scale],  xAngleChange * i, yAngleChange * i, zAngleChange * i),
-            matrixRotate([0 * scale, 1 * scale, 1/1.414 * scale],  xAngleChange * i, yAngleChange * i, zAngleChange * i)
+            matrixRotate(tetrahedron[0], xAngleChange * i, yAngleChange * i , zAngleChange * i),
+            matrixRotate(tetrahedron[1], xAngleChange * i, yAngleChange * i , zAngleChange * i),
+            matrixRotate(tetrahedron[2],  xAngleChange * i, yAngleChange * i , zAngleChange * i),
+            matrixRotate(tetrahedron[3],  xAngleChange * i , yAngleChange * i , zAngleChange * i)
         ]
 
         inside = []
@@ -89,11 +101,11 @@ def xmaslight():
 
         if (len(inside) > 0):
             xs, ys, zs = zip(*inside)
-            ax.scatter(xs, ys, zs, color='green')
+            ax.scatter(xs, ys, zs, color='orange')
 
         if (len(outside) > 0):
             xs, ys, zs = zip(*outside)
-            ax.scatter(xs, ys, zs, color='blue')
+            ax.scatter(xs, ys, zs, color='purple')
 
         xs = []
         ys = []
@@ -116,8 +128,10 @@ def xmaslight():
             zs.append(coord[2])
         ax.scatter(xs, ys, zs)
         ax.plot(xs, ys, zs)
+
+        plt.savefig(str(i) + '.png')
     
-    plt.show()
+    #plt.show()
 
 
 def sameSide(v1, v2, v3, v4, point):
